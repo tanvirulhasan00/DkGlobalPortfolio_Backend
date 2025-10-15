@@ -1,4 +1,5 @@
 ﻿using DkGLobalPortfolio.WebApi.Models.Blog;
+using DkGLobalPortfolio.WebApi.Models.Blog.Dto;
 using DkGLobalPortfolio.WebApi.Models.Request;
 using DkGLobalPortfolio.WebApi.Models.Response;
 using DkGLobalPortfolio.WebApi.Services.IServices;
@@ -352,7 +353,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
             {
 
                 // Generate slug from title
-                var slug = GenerateSlug(createPostDto.Title);
+                var slug = Slug.Generate(createPostDto.Title);
 
                 // check if slug already exists
                 var existingPost = await _serviceManager.Posts.GetAsync(new GenericServiceRequest<Post>
@@ -376,25 +377,30 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                     }
                     slug = $"{slug}-{counter}";
                 }
+                var featureImage = "";
+                if (createPostDto.FeaturedImage != null)
+                {
+                    featureImage = await _serviceManager.File.FileUpload(createPostDto.FeaturedImage, "blogs/post-images");
+                }
                 var blogPost = new Post
                 {
                     Title = createPostDto.Title,
                     Slug = slug,
                     Content = createPostDto.Content,
                     Excerpt = createPostDto.Excerpt,
-                    FeaturedImage = createPostDto.FeaturedImage,
+                    FeaturedImage = featureImage,
                     AuthorId = createPostDto.AuthorId,
                     CategoryId = createPostDto.CategoryId,
                     Status = createPostDto.Status,
                     ReadingTime = createPostDto.ReadingTime,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
                     IsActive = createPostDto.IsActive
                 };
                 // Set published date if status is published
                 if (createPostDto.Status == "published")
                 {
-                    blogPost.PublishedAt = DateTime.UtcNow;
+                    blogPost.PublishedAt = DateTime.Now;
                 }
 
                 await _serviceManager.Posts.AddAsync(blogPost);
@@ -409,7 +415,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                         {
                             PostId = blogPost.Id,  // newly created post Id
                             TagId = tagId,
-                            AddedAt = DateTime.UtcNow,
+                            AddedAt = DateTime.Now,
                             AddedBy = createPostDto.AuthorId
                         };
 
@@ -433,15 +439,307 @@ namespace DkGLobalPortfolio.WebApi.Controllers
             }
         }
 
-
-        private static string GenerateSlug(string phrase)
+        [HttpPost]
+        [Route("update")]
+        public async Task<ApiResponse> UpdateBlogPost(UpdatePostDto updatePostDto, CancellationToken cancellationToken)
         {
-            string str = phrase.ToLowerInvariant();
-            str = Regex.Replace(str, @"[^a-z0-9\s-]", ""); // remove invalid chars
-            str = Regex.Replace(str, @"\s+", "-").Trim('-'); // convert spaces to hyphens
-            str = Regex.Replace(str, @"-+", "-"); // collapse multiple hyphens
-            return str;
+            var response = new ApiResponse();
+            try
+            {
+                if(updatePostDto.Id <= 0)
+                {
+                    response.Success = false;
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    response.Message = "Id required";
+                    return response;
+                }
+                var existingPost = await _serviceManager.Posts.GetAsync(new GenericServiceRequest<Post>
+                {
+                    Expression = b => b.Id == updatePostDto.Id,
+                    NoTracking = true,
+                    CancellationToken = cancellationToken
+                });
+                var slug = "";
+                if(existingPost.Title != updatePostDto.Title)
+                {
+                    // Generate slug from title
+                     slug = Slug.Generate(updatePostDto.Title);
+
+                    // check if slug already exists
+                    var existingPostTo = await _serviceManager.Posts.GetAsync(new GenericServiceRequest<Post>
+                    {
+                        Expression = b => b.Slug == slug,
+                        NoTracking = true,
+                        CancellationToken = cancellationToken
+                    });
+
+                    if (existingPost != null)
+                    {
+                        // Append a number to make it unique
+                        int counter = 1;
+                        while (await _serviceManager.Posts.AnyAsync(new GenericServiceRequest<Post>
+                        {
+                            Expression = b => b.Slug == $"{slug}-{counter}",
+                            NoTracking = true,
+                            CancellationToken = cancellationToken
+                        }))
+                        {
+                            counter++;
+                        }
+                        slug = $"{slug}-{counter}";
+                    }
+                }
+
+                var featuredImage = "";
+                if (updatePostDto.FeaturedImage != null)
+                {
+                    //delete old images
+                    if (!string.IsNullOrEmpty(existingPost.FeaturedImage))
+                    {
+                        _serviceManager.File.DeleteFile(existingPost.FeaturedImage);
+                    }
+
+                    featuredImage = await _serviceManager.File.FileUpload(updatePostDto.FeaturedImage, "blogs/post-images");
+                }
+
+                existingPost.Title = updatePostDto.Title ?? existingPost.Title;
+                existingPost.Slug = slug ?? existingPost.Slug;
+                existingPost.Content = updatePostDto.Content ?? existingPost.Content;
+                existingPost.Excerpt = updatePostDto.Excerpt ?? existingPost.Excerpt;
+                existingPost.FeaturedImage = featuredImage ?? existingPost.FeaturedImage;
+                existingPost.AuthorId = updatePostDto.AuthorId <= 0 ? existingPost.AuthorId : updatePostDto.AuthorId;
+                existingPost.CategoryId = updatePostDto.CategoryId <= 0 ? existingPost.CategoryId : updatePostDto.CategoryId;
+                existingPost.Status = updatePostDto.Status ?? existingPost.Status;
+                existingPost.ReadingTime = updatePostDto.ReadingTime <= 0 ? existingPost.ReadingTime : updatePostDto.ReadingTime;
+                existingPost.UpdatedAt = DateTime.Now;   
+
+                _serviceManager.Posts.Update(existingPost);
+                await _serviceManager.Save();
+
+                // now handle tags
+                if (updatePostDto.TagIds != null)
+                {
+                    // Remove existing tags for this post
+                    var existingTags = await _serviceManager.BlogPostTags.GetAllAsync(new GenericServiceRequest<BlogPostTag>
+                    {
+                        Expression = t => t.PostId == updatePostDto.Id,
+                        NoTracking = false, // we want to track so we can delete
+                        CancellationToken = cancellationToken
+                    });
+
+                    if (existingTags.Any())
+                    {
+                        foreach (var oldTag in existingTags)
+                        {
+                            _serviceManager.BlogPostTags.Remove(oldTag);
+                        }
+                    }
+
+                    // Add new tags
+                    foreach (var tagId in updatePostDto.TagIds)
+                    {
+                        var blogPostTag = new BlogPostTag
+                        {
+                            PostId = updatePostDto.Id,
+                            TagId = tagId,
+                            AddedAt = DateTime.Now,
+                            AddedBy = updatePostDto.AuthorId
+                        };
+
+                        await _serviceManager.BlogPostTags.AddAsync(blogPostTag);
+                    }
+
+                    await _serviceManager.Save();
+                }
+
+
+                response.Success = true;
+                response.StatusCode = HttpStatusCode.Created;
+                response.Message = "Updated Successfully";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.Message = ex.Message;
+                return response;
+            }
         }
+
+        //Delete API (Soft Delete)
+        [HttpPost]
+        [Route("soft-delete")]
+        public async Task<ApiResponse> SoftDeleteBlogPost(DeletePostDto deletePostDto, CancellationToken cancellationToken)
+        {
+            var response = new ApiResponse();
+            try
+            {
+                if (deletePostDto == null || deletePostDto.Ids == null || !deletePostDto.Ids.Any())
+                {
+                    response.Success = false;
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    response.Message = "At least one Id is required";
+                    return response;
+                }
+
+                foreach (var id in deletePostDto.Ids)
+                {
+                    var post = await _serviceManager.Posts.GetAsync(new GenericServiceRequest<Post>
+                    {
+                        Expression = b => b.Id == id && !b.IsDeleted,
+                        NoTracking = false,
+                        CancellationToken = cancellationToken
+                    });
+
+                    if (post != null)
+                    {
+                        post.IsDeleted = true;
+                        post.DeletedAt = DateTime.Now;
+                        post.DeletedBy = deletePostDto.DeletedBy;
+
+                        _serviceManager.Posts.Update(post);
+                    }
+                }
+
+                await _serviceManager.Save();
+
+                response.Success = true;
+                response.StatusCode = HttpStatusCode.OK;
+                response.Message = "Post(s) soft deleted successfully";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.Message = ex.Message;
+                return response;
+            }
+        }
+
+        //Delete API (Hard Delete)
+        [HttpPost]
+        [Route("delete")]
+        public async Task<ApiResponse> DeleteBlogPost(DeletePostDto deletePostDto, CancellationToken cancellationToken)
+        {
+            var response = new ApiResponse();
+            try
+            {
+                if (deletePostDto == null || deletePostDto.Ids == null || !deletePostDto.Ids.Any())
+                {
+                    response.Success = false;
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    response.Message = "At least one Id is required";
+                    return response;
+                }
+
+                foreach (var id in deletePostDto.Ids)
+                {
+                    var post = await _serviceManager.Posts.GetAsync(new GenericServiceRequest<Post>
+                    {
+                        Expression = b => b.Id == id,
+                        NoTracking = false,
+                        CancellationToken = cancellationToken
+                    });
+
+                    if (post != null)
+                    {
+                        // Delete related tags first
+                        var existingTags = await _serviceManager.BlogPostTags.GetAllAsync(new GenericServiceRequest<BlogPostTag>
+                        {
+                            Expression = t => t.PostId == id,
+                            NoTracking = false,
+                            CancellationToken = cancellationToken
+                        });
+
+                        if (existingTags.Any())
+                        {
+                            foreach (var tag in existingTags)
+                            {
+                                _serviceManager.BlogPostTags.Remove(tag);
+                            }
+                        }
+
+                        //delete old images
+                        if (!string.IsNullOrEmpty(post.FeaturedImage))
+                        {
+                            _serviceManager.File.DeleteFile(post.FeaturedImage);
+                        }
+
+                        // Delete the post itself
+                        _serviceManager.Posts.Remove(post);
+                    }
+                }
+
+                await _serviceManager.Save();
+
+                response.Success = true;
+                response.StatusCode = HttpStatusCode.OK;
+                response.Message = "Post(s) deleted successfully";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.Message = ex.Message;
+                return response;
+            }
+        }
+
+        //Restore API
+        [HttpPost]
+        [Route("restore")]
+        public async Task<ApiResponse> RestoreBlogPost(DeletePostDto restorePostDto, CancellationToken cancellationToken)
+        {
+            var response = new ApiResponse();
+            try
+            {
+                if (restorePostDto == null || restorePostDto.Ids == null || !restorePostDto.Ids.Any())
+                {
+                    response.Success = false;
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    response.Message = "At least one Id is required";
+                    return response;
+                }
+
+                foreach (var id in restorePostDto.Ids)
+                {
+                    var post = await _serviceManager.Posts.GetAsync(new GenericServiceRequest<Post>
+                    {
+                        Expression = b => b.Id == id && b.IsDeleted, // only restore deleted ones
+                        NoTracking = false,
+                        CancellationToken = cancellationToken
+                    });
+
+                    if (post != null)
+                    {
+                        post.IsDeleted = false;
+                        post.DeletedAt = null;
+                        post.DeletedBy = null;
+                        post.UpdatedAt = DateTime.Now;
+
+                        _serviceManager.Posts.Update(post);
+                    }
+                }
+
+                await _serviceManager.Save();
+
+                response.Success = true;
+                response.StatusCode = HttpStatusCode.OK;
+                response.Message = "Post(s) restored successfully";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.Message = ex.Message;
+                return response;
+            }
+        }
+
     }
 
 }

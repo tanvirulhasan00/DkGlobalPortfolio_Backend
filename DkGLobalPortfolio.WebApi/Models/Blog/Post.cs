@@ -45,6 +45,11 @@ namespace DkGLobalPortfolio.WebApi.Models.Blog
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        // Soft delete fields
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
+        public int? DeletedBy { get; set; }
+
         // Navigation properties
         public virtual Author Author { get; set; } = null!;
         public virtual Category Category { get; set; } = null!;

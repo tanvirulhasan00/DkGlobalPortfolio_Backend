@@ -15,7 +15,7 @@ namespace DkGLobalPortfolio.WebApi.Models.Blog
         public string Slug { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public string? Excerpt { get; set; }
-        public string? FeaturedImage { get; set; }
+        public IFormFile? FeaturedImage { get; set; }
         public int AuthorId { get; set; }
         public int CategoryId { get; set; }
 
@@ -29,6 +29,7 @@ namespace DkGLobalPortfolio.WebApi.Models.Blog
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public List<int>? TagIds { get; set; }
 
     }
 }

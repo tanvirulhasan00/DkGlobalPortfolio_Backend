@@ -6,7 +6,7 @@
 
         public int PostId { get; set; }
         public int TagId { get; set; }
-        public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+        public DateTime AddedAt { get; set; } = DateTime.Now;
         public int? AddedBy { get; set; }
 
         public Post Post { get; set; } = null!;

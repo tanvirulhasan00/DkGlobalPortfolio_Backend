@@ -63,6 +63,7 @@ namespace DkGLobalPortfolio.WebApi.Services
             {
                 var adminUser = new ApplicationUser
                 {
+                    FullName = "Dk Global",
                     UserName = "admin",
                     Email = adminEmail,
                     PhoneNumber = "01970806028",

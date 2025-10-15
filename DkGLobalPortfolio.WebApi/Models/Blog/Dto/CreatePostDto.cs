@@ -12,7 +12,7 @@ namespace DkGLobalPortfolio.WebApi.Models.Blog
         public string Slug { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public string? Excerpt { get; set; }
-        public string? FeaturedImage { get; set; }
+        public IFormFile? FeaturedImage { get; set; }
         public int AuthorId { get; set; }
         public int CategoryId { get; set; }
         public string Status { get; set; } = "draft";

@@ -51,7 +51,7 @@ namespace DkGLobalPortfolio.WebApi.Services
                     query = query.Include(includeProperty.Trim());
 
                 }
-                ;
+                
             }
             if(request.OrderType != null)
             {

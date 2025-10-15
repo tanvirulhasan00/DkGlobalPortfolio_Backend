@@ -1,4 +1,11 @@
 ﻿using DkGLobalPortfolio.WebApi.Models.Blog;
+using DkGLobalPortfolio.WebApi.Models.Leader;
+using DkGLobalPortfolio.WebApi.Models.Message;
+using DkGLobalPortfolio.WebApi.Models.Newsletter;
+using DkGLobalPortfolio.WebApi.Models.Partner;
+using DkGLobalPortfolio.WebApi.Models.Product;
+using DkGLobalPortfolio.WebApi.Models.Profile;
+using DkGLobalPortfolio.WebApi.Models.Report;
 using DkGLobalPortfolio.WebApi.Models.User;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -18,8 +25,21 @@ namespace DkGLobalPortfolio.WebApi.Database
         public DbSet<Post> Posts => Set<Post>();
         public DbSet<Category> Categories => Set<Category>();
         public DbSet<Tag> Tags => Set<Tag>();
-        public DbSet<Author> Author => Set<Author>();
+        public DbSet<Author> Authors => Set<Author>();
         public DbSet<BlogPostTag> BlogPostTags => Set<BlogPostTag>();
+        public DbSet<LeaderShip> LeaderShips => Set<LeaderShip>();
+        public DbSet<Message> Messages => Set<Message>();
+        public DbSet<Newsletter> Newsletters => Set<Newsletter>();
+        public DbSet<Partner> Partners => Set<Partner>();
+        public DbSet<Product> Products => Set<Product>();
+        public DbSet<ProductCategory> PartnerCategories => Set<ProductCategory>();
+        public DbSet<ProductImage> PartnerImages => Set<ProductImage>();
+        public DbSet<CompanyInfo> CompanyInfos => Set<CompanyInfo>();
+        public DbSet<Branch> Branches => Set<Branch>();
+        public DbSet<BankInfo> BankInfos => Set<BankInfo>();
+        public DbSet<ProfileImage> ProfileImages => Set<ProfileImage>();
+        public DbSet<Report> Reports => Set<Report>();
+        public DbSet<ReportCategory> ReportCategories => Set<ReportCategory>();
 
 
 
@@ -61,7 +81,7 @@ namespace DkGLobalPortfolio.WebApi.Database
                 .IsUnique();
 
             builder.Entity<Author>()
-                .HasIndex(a => a.Username)
+                .HasIndex(a => a.FirstName)
                 .IsUnique();
 
             builder.Entity<Author>()

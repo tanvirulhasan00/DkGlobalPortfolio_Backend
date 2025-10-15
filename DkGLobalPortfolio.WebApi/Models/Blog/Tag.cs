@@ -17,7 +17,7 @@ namespace DkGLobalPortfolio.WebApi.Models.Blog
         [MaxLength(100)]
         public string Slug { get; set; } = string.Empty;
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
         public bool IsActive { get; set; } = true;
 
         // Navigation property

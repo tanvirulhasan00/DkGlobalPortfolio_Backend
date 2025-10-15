@@ -1,4 +1,4 @@
-using DkGLobalPortfolio.WebApi.Database;
+﻿using DkGLobalPortfolio.WebApi.Database;
 using DkGLobalPortfolio.WebApi.Models.User;
 using DkGLobalPortfolio.WebApi.Services;
 using DkGLobalPortfolio.WebApi.Services.IServices;
@@ -29,7 +29,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddDefaultTokenProviders();
 builder.Services.AddScoped<IDbInitializerService, DbInitializerService>();
 builder.Services.AddScoped<IServiceManager, ServiceManager>();
-
+builder.Services.AddScoped<IChecker, Checker>();
 
 
 builder.Services.AddSwaggerGen(options =>
@@ -120,16 +120,39 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseCors("AllowAll");
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHealthChecks("/health");
 app.MapControllers();
-await SeedDatabaseAsync(app);
 
+var conStr = builder.Configuration.GetConnectionString("LiveConnectionString") ?? "";
+if (!await ChecksDbConnection(app, conStr))
+{
+    // stop app completely
+    return;
+}
+await SeedDatabaseAsync(app);
 app.Run();
 
+
+static async Task<bool> ChecksDbConnection(WebApplication app, string connectionString)
+{
+    using var scope = app.Services.CreateScope();
+    var dbChecker = scope.ServiceProvider.GetRequiredService<IChecker>();
+    bool isConnected = await dbChecker.IsDatabaseConnectedAsync(connectionString);
+    if (!isConnected) 
+    {
+        Console.WriteLine("❌ Database connection failed. app is shutting down...");
+        return false;
+        //throw new ApplicationException("Database connection failed.");
+    }
+
+    Console.WriteLine("✅ Database is connected!");
+    return true;
+}
 static async Task SeedDatabaseAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
