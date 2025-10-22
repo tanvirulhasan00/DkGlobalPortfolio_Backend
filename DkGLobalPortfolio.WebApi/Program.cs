@@ -119,6 +119,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 app.UseCors("AllowAll");
 app.UseStaticFiles();
 app.UseHttpsRedirection();
@@ -147,7 +152,7 @@ static async Task<bool> ChecksDbConnection(WebApplication app, string connection
     {
         Console.WriteLine("❌ Database connection failed. app is shutting down...");
         return false;
-        //throw new ApplicationException("Database connection failed.");
+        
     }
 
     Console.WriteLine("✅ Database is connected!");

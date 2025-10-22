@@ -7,6 +7,7 @@ using DkGLobalPortfolio.WebApi.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 
@@ -47,10 +48,35 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                     return response;
                 }
 
+                var dto = data.Select(x => new BlogPostResDto
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Slug = x.Slug,
+                    Content = x.Content,
+                    Excerpt = x.Excerpt,
+                    FeaturedImage = x.FeaturedImage,
+                    AuthorName = x.Author != null ? $"{x.Author.FirstName} {x.Author.LastName}" : null,
+                    AuthorAvatar = x.Author != null ? x.Author.Avatar : null,
+                    AuthorBio = x.Author != null ? x.Author.Bio : null,
+                    CategoryName = x.Category?.Name,
+                    Tags = x.BlogPostTags?
+                        .Select(t => t.Tag?.Name)
+                        .Where(name => !string.IsNullOrEmpty(name))
+                        .ToList(),
+                    Status = x.Status,
+                    IsActive = x.IsActive,
+                    ReadingTime = x.ReadingTime,
+                    PublishedAt = x.PublishedAt,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt,
+                    IsDeleted = x.IsDeleted
+                });
+
                 response.Success = true;
                 response.StatusCode = HttpStatusCode.OK;
                 response.Message = "Successful";
-                response.Result = data;
+                response.Result = dto;
                 return response;
             }catch(TaskCanceledException ex)
             {
@@ -86,7 +112,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 var genericReq = new GenericServiceRequest<Post>
                 {
                     Expression = x=>x.Id == BlogId,
-                    IncludeProperties = "Author,Category,BlogPostTags",
+                    IncludeProperties = "Author,Category,BlogPostTags.Tag",
                     OrderType = null,
                     OrderExpression = null,
                     NoTracking = true,
@@ -101,10 +127,36 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                     return response;
                 }
 
+                // ✅ Map entity to simplified DTO
+                var dto = new BlogPostResDto
+                {
+                    Id = data.Id,
+                    Title = data.Title,
+                    Slug = data.Slug,
+                    Content = data.Content,
+                    Excerpt = data.Excerpt,
+                    FeaturedImage = data.FeaturedImage,
+                    AuthorName = data.Author != null ? $"{data.Author.FirstName} {data.Author.LastName}" : null,
+                    AuthorAvatar = data.Author != null ? data.Author.Avatar : null,
+                    AuthorBio = data.Author != null ? data.Author.Bio : null,
+                    CategoryName = data.Category?.Name,
+                    Tags = data.BlogPostTags?
+                        .Select(t => t.Tag?.Name)
+                        .Where(name => !string.IsNullOrEmpty(name))
+                        .ToList(),
+                    Status = data.Status,
+                    IsActive = data.IsActive,
+                    ReadingTime = data.ReadingTime,
+                    PublishedAt = data.PublishedAt,
+                    CreatedAt = data.CreatedAt,
+                    UpdatedAt = data.UpdatedAt,
+                    IsDeleted = data.IsDeleted
+                };
+
                 response.Success = true;
                 response.StatusCode = HttpStatusCode.OK;
                 response.Message = "Successful";
-                response.Result = data;
+                response.Result = dto;
                 return response;
             }
             catch (TaskCanceledException ex)
@@ -346,7 +398,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
 
         [HttpPost]
         [Route("create")]
-        public async Task<ApiResponse> CreateBlogPost(CreatePostDto createPostDto,CancellationToken cancellationToken)
+        public async Task<ApiResponse> CreateBlogPost([FromForm] CreatePostDto createPostDto,CancellationToken cancellationToken)
         {
             var response = new ApiResponse();
             try
@@ -441,7 +493,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
 
         [HttpPost]
         [Route("update")]
-        public async Task<ApiResponse> UpdateBlogPost(UpdatePostDto updatePostDto, CancellationToken cancellationToken)
+        public async Task<ApiResponse> UpdateBlogPost([FromForm] UpdatePostDto updatePostDto, CancellationToken cancellationToken)
         {
             var response = new ApiResponse();
             try
@@ -460,33 +512,36 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                     CancellationToken = cancellationToken
                 });
                 var slug = "";
-                if(existingPost.Title != updatePostDto.Title)
+                if (!string.IsNullOrEmpty(updatePostDto.Title))
                 {
-                    // Generate slug from title
-                     slug = Slug.Generate(updatePostDto.Title);
-
-                    // check if slug already exists
-                    var existingPostTo = await _serviceManager.Posts.GetAsync(new GenericServiceRequest<Post>
+                    if(existingPost.Title != updatePostDto.Title)
                     {
-                        Expression = b => b.Slug == slug,
-                        NoTracking = true,
-                        CancellationToken = cancellationToken
-                    });
+                        // Generate slug from title
+                         slug = Slug.Generate(updatePostDto.Title);
 
-                    if (existingPost != null)
-                    {
-                        // Append a number to make it unique
-                        int counter = 1;
-                        while (await _serviceManager.Posts.AnyAsync(new GenericServiceRequest<Post>
+                        // check if slug already exists
+                        var existingPostTo = await _serviceManager.Posts.GetAsync(new GenericServiceRequest<Post>
                         {
-                            Expression = b => b.Slug == $"{slug}-{counter}",
+                            Expression = b => b.Slug == slug,
                             NoTracking = true,
                             CancellationToken = cancellationToken
-                        }))
+                        });
+
+                        if (existingPost != null)
                         {
-                            counter++;
+                            // Append a number to make it unique
+                            int counter = 1;
+                            while (await _serviceManager.Posts.AnyAsync(new GenericServiceRequest<Post>
+                            {
+                                Expression = b => b.Slug == $"{slug}-{counter}",
+                                NoTracking = true,
+                                CancellationToken = cancellationToken
+                            }))
+                            {
+                                counter++;
+                            }
+                            slug = $"{slug}-{counter}";
                         }
-                        slug = $"{slug}-{counter}";
                     }
                 }
 
@@ -503,10 +558,10 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 }
 
                 existingPost.Title = updatePostDto.Title ?? existingPost.Title;
-                existingPost.Slug = slug ?? existingPost.Slug;
+                existingPost.Slug = slug != "" && slug != null ? slug : existingPost.Slug;
                 existingPost.Content = updatePostDto.Content ?? existingPost.Content;
                 existingPost.Excerpt = updatePostDto.Excerpt ?? existingPost.Excerpt;
-                existingPost.FeaturedImage = featuredImage ?? existingPost.FeaturedImage;
+                existingPost.FeaturedImage = updatePostDto.FeaturedImage == null ? existingPost.FeaturedImage : featuredImage;
                 existingPost.AuthorId = updatePostDto.AuthorId <= 0 ? existingPost.AuthorId : updatePostDto.AuthorId;
                 existingPost.CategoryId = updatePostDto.CategoryId <= 0 ? existingPost.CategoryId : updatePostDto.CategoryId;
                 existingPost.Status = updatePostDto.Status ?? existingPost.Status;

@@ -139,6 +139,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                     PhoneNumber = dto.PhoneNumber,
                     Location = dto.Location,
                     MapLink = dto.MapLink,
+                    SecondMapLink = dto.SecondMapLink,
                     FacebookLink = dto.FacebookLink,
                     YoutubeLink = dto.YoutubeLink,
                     LinkedInLink = dto.LinkedInLink,
@@ -207,6 +208,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 toUpdate.PhoneNumber = dto.PhoneNumber ?? toUpdate.PhoneNumber;
                 toUpdate.Location = dto.Location ?? toUpdate.Location;
                 toUpdate.MapLink = dto.MapLink ?? toUpdate.MapLink;
+                toUpdate.SecondMapLink = dto.SecondMapLink ?? toUpdate.SecondMapLink;
                 toUpdate.FacebookLink = dto.FacebookLink ?? toUpdate.FacebookLink;
                 toUpdate.YoutubeLink = dto.YoutubeLink ?? toUpdate.YoutubeLink;
                 toUpdate.LinkedInLink = dto.LinkedInLink ?? toUpdate.LinkedInLink;

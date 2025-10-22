@@ -16,6 +16,7 @@ namespace DkGLobalPortfolio.WebApi.Models.Profile
 
         //links
         public string MapLink { get; set; }
+        public string SecondMapLink { get; set; }
         public string FacebookLink { get; set; }
         public string? YoutubeLink { get; set; }
         public string? LinkedInLink { get; set; }

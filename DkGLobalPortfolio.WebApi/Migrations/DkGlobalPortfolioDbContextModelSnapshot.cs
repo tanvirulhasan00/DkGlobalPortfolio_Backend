@@ -608,6 +608,10 @@ namespace DkGLobalPortfolio.WebApi.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("SecondMapLink")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("ShortTitle")
                         .IsRequired()
                         .HasColumnType("longtext");

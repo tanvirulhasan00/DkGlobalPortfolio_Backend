@@ -9,8 +9,8 @@ namespace DkGLobalPortfolio.WebApi.Models.Blog
         [MaxLength(255)]
         public string Title { get; set; } = string.Empty;
         [MaxLength(255)]
-        public string Slug { get; set; } = string.Empty;
-        public string Content { get; set; } = string.Empty;
+        public string? Slug { get; set; } = string.Empty;
+        public string? Content { get; set; } = string.Empty;
         public string? Excerpt { get; set; }
         public IFormFile? FeaturedImage { get; set; }
         public int AuthorId { get; set; }
