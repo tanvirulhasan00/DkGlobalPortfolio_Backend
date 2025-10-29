@@ -133,8 +133,23 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                     response.StatusCode = HttpStatusCode.BadRequest;
                     response.Message = "Empty request data";
                     return response;
-                }                
-                
+                }
+
+                var data = await _serviceManager.Newsletters.GetAsync(new GenericServiceRequest<Newsletter>
+                {
+                    Expression = x => x.Email == dto.Email,
+                    IncludeProperties = null,
+                    NoTracking = true,
+                    CancellationToken = cancellationToken
+                });
+                if(data != null)
+                {
+                    response.Success = false;
+                    response.StatusCode = HttpStatusCode.Conflict;
+                    response.Message = "Data Already Exists.";
+                    return response;
+                }
+
                 var toCreate = new Newsletter
                 {            
                     Email = dto.Email,

@@ -135,6 +135,8 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 {
                     Name = dto.Name,
                     Description = dto.Description,
+                    Link = dto.Link,
+                    Icon = dto.Icon,
                     IsActive = true,
                 };
                 await _serviceManager.ProductCategories.AddAsync(toCreate);
@@ -186,6 +188,8 @@ namespace DkGLobalPortfolio.WebApi.Controllers
 
                 toUpdate.Name = dto.Name ?? toUpdate.Name;
                 toUpdate.Description = dto.Description ?? toUpdate.Description;
+                toUpdate.Link = dto.Link ?? toUpdate.Link;
+                toUpdate.Icon = dto.Icon ?? toUpdate.Icon;
                 
                 _serviceManager.ProductCategories.Update(toUpdate);
                 await _serviceManager.Save();

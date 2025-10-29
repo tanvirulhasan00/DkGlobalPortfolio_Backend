@@ -149,7 +149,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
 
                 response.Success = true;
                 response.StatusCode = HttpStatusCode.Created;
-                response.Message = "Created Successfully";
+                response.Message = "Message Sent Successfully";
                 return response;
 
             }

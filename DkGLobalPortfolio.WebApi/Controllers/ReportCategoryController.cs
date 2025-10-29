@@ -134,7 +134,9 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 var toCreate = new ReportCategory
                 {
                     Name = dto.Name,
-                    ShortDescription = dto.ShortDescription,
+                    Description = dto.Description,
+                    Link = dto.Link,
+                    Icon = dto.Icon,
                     IsActive = true
                 };
                 await _serviceManager.ReportCategories.AddAsync(toCreate);
@@ -183,7 +185,9 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 });
 
                 toUpdate.Name = dto.Name ?? toUpdate.Name;
-                toUpdate.ShortDescription = dto.ShortDescription ?? toUpdate.ShortDescription;
+                toUpdate.Description = dto.Description ?? toUpdate.Description;
+                toUpdate.Link = dto.Link ?? toUpdate.Link;
+                toUpdate.Icon = dto.Icon ?? toUpdate.Icon;
                 
                 _serviceManager.ReportCategories.Update(toUpdate);
                 await _serviceManager.Save();
