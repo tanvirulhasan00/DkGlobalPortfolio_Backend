@@ -225,6 +225,65 @@ namespace DkGLobalPortfolio.WebApi.Controllers
             }
         }
 
+        [HttpPut]
+        [Route("update-by-productid")]
+        public async Task<ApiResponse> UpdateProductImageByProductId(UpdateProfileImageUrlDto dto, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (dto.OwnerId <= 0)
+                {
+                    response.Success = false;
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    response.Message = "Id required.";
+                    return response;
+                }
+                var toUpdate = await _serviceManager.ProductImages.GetAsync(new GenericServiceRequest<ProductImage>
+                {
+                    Expression = b => b.ProductId == dto.OwnerId,
+                    NoTracking = true,
+                    CancellationToken = cancellationToken
+                });
+                var imageUrl = "";
+                if (dto.ImageUrl != null)
+                {
+                    //delete old images
+                    if (!string.IsNullOrEmpty(toUpdate.ImageUrl))
+                    {
+                        _serviceManager.File.DeleteFile(toUpdate.ImageUrl);
+                    }
+
+                    imageUrl = await _serviceManager.File.FileUpload(dto.ImageUrl, "product-images");
+                }
+
+                toUpdate.Title = dto.Title ?? toUpdate.Title;
+                toUpdate.ImageUrl = imageUrl != "" ? imageUrl : toUpdate.ImageUrl;
+
+                _serviceManager.ProductImages.Update(toUpdate);
+                await _serviceManager.Save();
+
+                response.Success = true;
+                response.StatusCode = HttpStatusCode.OK;
+                response.Message = "Updated Successfully";
+                return response;
+
+            }
+            catch (TaskCanceledException ex)
+            {
+                response.Success = false;
+                response.StatusCode = HttpStatusCode.RequestTimeout;
+                response.Message = ex.Message;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.Message = ex.Message;
+                return response;
+            }
+        }
+
         [HttpDelete]
         [Route("delete")]
         public async Task<ApiResponse> DeleteProductImage(int Id, CancellationToken cancellationToken)
