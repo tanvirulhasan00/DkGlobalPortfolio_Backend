@@ -1,4 +1,5 @@
 ﻿using DkGLobalPortfolio.WebApi.Models.Blog;
+using DkGLobalPortfolio.WebApi.Models.ClientTestimonial;
 using DkGLobalPortfolio.WebApi.Models.Leader;
 using DkGLobalPortfolio.WebApi.Models.Message;
 using DkGLobalPortfolio.WebApi.Models.Newsletter;
@@ -40,6 +41,7 @@ namespace DkGLobalPortfolio.WebApi.Database
         public DbSet<ProfileImage> ProfileImages => Set<ProfileImage>();
         public DbSet<Report> Reports => Set<Report>();
         public DbSet<ReportCategory> ReportCategories => Set<ReportCategory>();
+        public DbSet<ClientTestimonial> ClientTestimonials => Set<ClientTestimonial>();
 
 
 

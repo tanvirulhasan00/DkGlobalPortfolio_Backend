@@ -28,6 +28,7 @@
         public decimal AnnualTurnover { get; set; }
         public int NumberOfEmployees { get; set; }
         public int NumberOfSewingPlants { get; set; }
+        public int NumberOfSewingLines { get; set; }
         public int ProductionCapacity { get; set; }
         public string? PrimaryMarkets { get; set; }
 

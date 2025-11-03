@@ -140,6 +140,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 var toCreate = new Partner
                 {
                     Title = dto.Title,
+                    Link = dto.Link,
                     ImageUrl = imageUrl,
                     IsActive = true
                 };
@@ -201,6 +202,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
 
 
                 toUpdateData.Title = dto.Title ?? toUpdateData.Title;
+                toUpdateData.Link = dto.Link ?? toUpdateData.Link;
                 toUpdateData.ImageUrl = imageUrl != "" ? imageUrl : toUpdateData.ImageUrl;
                 
                 _serviceManager.Partners.Update(toUpdateData);

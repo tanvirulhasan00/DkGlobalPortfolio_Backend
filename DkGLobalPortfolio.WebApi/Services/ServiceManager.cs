@@ -1,4 +1,5 @@
 ﻿using DkGLobalPortfolio.WebApi.Database;
+using DkGLobalPortfolio.WebApi.Models.ClientTestimonial;
 using DkGLobalPortfolio.WebApi.Models.Partner;
 using DkGLobalPortfolio.WebApi.Models.User;
 using DkGLobalPortfolio.WebApi.Services.IServices;
@@ -28,6 +29,7 @@ namespace DkGLobalPortfolio.WebApi.Services
         public IProductImageService ProductImages { get; private set; }
         public IProductService Products { get; private set; }
         public IProductCategoryService ProductCategories { get; private set; }
+        public IClientTestimonialService ClientTestimonials { get; private set; }
         
         //break point
         private readonly DkGlobalPortfolioDbContext _db;
@@ -64,6 +66,7 @@ namespace DkGLobalPortfolio.WebApi.Services
             ProductImages = new ProductImageService(_db);
             Products = new ProductService(_db);
             ProductCategories = new ProductCategoryService(_db);
+            ClientTestimonials = new ClientTestimonialService(_db);
         }
         public async Task<int> Save()
         {

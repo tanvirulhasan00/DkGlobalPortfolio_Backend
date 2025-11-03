@@ -23,5 +23,6 @@
        public IProductImageService ProductImages { get; }
        public IProductService Products { get; }
        public IProductCategoryService ProductCategories { get; }
+       public IClientTestimonialService ClientTestimonials { get; }
     }
 }

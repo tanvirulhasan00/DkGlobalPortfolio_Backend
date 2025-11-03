@@ -1,23 +1,23 @@
-﻿
-using DkGLobalPortfolio.WebApi.Models.Profile;
-using DkGLobalPortfolio.WebApi.Models.Profile.Dto;
+﻿using DkGLobalPortfolio.WebApi.Models.ClientTestimonial;
+using DkGLobalPortfolio.WebApi.Models.ClientTestimonialDto.Dto;
+using DkGLobalPortfolio.WebApi.Models.Leader;
+using DkGLobalPortfolio.WebApi.Models.Leader.Dto;
 using DkGLobalPortfolio.WebApi.Models.Request;
 using DkGLobalPortfolio.WebApi.Models.Response;
 using DkGLobalPortfolio.WebApi.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using static Google.Protobuf.Reflection.SourceCodeInfo.Types;
 
 
 namespace DkGLobalPortfolio.WebApi.Controllers
 {
-    [Route("api/company-info")]
+    [Route("api/client-testimonial")]
     [ApiController]
-    public class CompanyInfoController : ControllerBase
+    public class ClientTestimonialController : ControllerBase
     {
         private readonly IServiceManager _serviceManager;
-        private ApiResponse response;
-        public CompanyInfoController(IServiceManager serviceManager)
+        private readonly ApiResponse response;
+        public ClientTestimonialController(IServiceManager serviceManager)
         {
             _serviceManager = serviceManager;
             response = new ApiResponse();
@@ -25,11 +25,11 @@ namespace DkGLobalPortfolio.WebApi.Controllers
 
         [HttpGet]
         [Route("getall")]
-        public async Task<ApiResponse> GetAllCompanyInfo(CancellationToken cancellationToken)
+        public async Task<ApiResponse> GetAllClientTestimonial(CancellationToken cancellationToken)
         {
             try
             {
-                var data = await _serviceManager.CompanyInfos.GetAllAsync(new GenericServiceRequest<CompanyInfo>
+                var data = await _serviceManager.ClientTestimonials.GetAllAsync(new GenericServiceRequest<ClientTestimonial>
                 {
                     NoTracking = true,
                     CancellationToken = cancellationToken
@@ -66,7 +66,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
 
         [HttpGet]
         [Route("get")]
-        public async Task<ApiResponse> GetCompanyInfo(int Id, CancellationToken cancellationToken)
+        public async Task<ApiResponse> GetClientTestimonial(int Id, CancellationToken cancellationToken)
         {
             try
             {
@@ -77,7 +77,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                     response.Message = "Id not found.";
                     return response;
                 }
-                var data = await _serviceManager.CompanyInfos.GetAsync(new GenericServiceRequest<CompanyInfo>
+                var data = await _serviceManager.ClientTestimonials.GetAsync(new GenericServiceRequest<ClientTestimonial>
                 {
                     Expression = x => x.Id == Id,
                     IncludeProperties = null,
@@ -116,47 +116,33 @@ namespace DkGLobalPortfolio.WebApi.Controllers
 
         [HttpPost]
         [Route("create")]
-        public async Task<ApiResponse> CreateCompanyInfo(CreateCompanyInfoDto dto, CancellationToken cancellationToken)
+        public async Task<ApiResponse> CreateClientTestimonial(CreateClientTestimonialDto dto, CancellationToken cancellationToken)
         {
             try
             {
-               
+                var imageUrl = "";
                 if (dto == null)
                 {
                     response.Success = false;
                     response.StatusCode = HttpStatusCode.BadRequest;
                     response.Message = "Empty request data";
                     return response;
+                } 
+                if(dto.ImageUrl != null)
+                {
+                    imageUrl = await _serviceManager.File.FileUpload(dto.ImageUrl, "images");
                 }
                 
-                var toCreate = new CompanyInfo
+                var toCreate = new ClientTestimonial
                 {
                     Name = dto.Name,
-                    Quote = dto.Quote,
-                    ShortTitle = dto.ShortTitle,
-                    Description = dto.Description,
-                    Email = dto.Email,
-                    PhoneNumber = dto.PhoneNumber,
-                    Location = dto.Location,
-                    MapLink = dto.MapLink,
-                    SecondMapLink = dto.SecondMapLink,
-                    FacebookLink = dto.FacebookLink,
-                    YoutubeLink = dto.YoutubeLink,
-                    LinkedInLink = dto.LinkedInLink,
-                    InstagramLink = dto.InstagramLink,
-                    TwitterLink = dto.TwitterLink,
-                    Mission = dto.Mission,
-                    Vision = dto.Vision,
-                    AnnualTurnover = dto.AnnualTurnover,
-                    NumberOfEmployees = dto.NumberOfEmployees,
-                    NumberOfSewingPlants = dto.NumberOfSewingPlants,
-                    NumberOfSewingLines = dto.NumberOfSewingLines,
-                    ProductionCapacity = dto.ProductionCapacity,
-                    PrimaryMarkets = dto.PrimaryMarkets,
-                    
-                    
+                    CompanyName = dto.CompanyName,
+                    Message = dto.Message,
+                    ImageUrl = imageUrl,
+                    ReviewStars = dto.ReviewStars,
+                    IsActive = true
                 };
-                await _serviceManager.CompanyInfos.AddAsync(toCreate);
+                await _serviceManager.ClientTestimonials.AddAsync(toCreate);
                 await _serviceManager.Save();
 
                 response.Success = true;
@@ -183,7 +169,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
 
         [HttpPut]
         [Route("update")]
-        public async Task<ApiResponse> UpdateCompanyInfo(UpdateCompanyInfoDto dto, CancellationToken cancellationToken)
+        public async Task<ApiResponse> UpdateClientTestimonial(UpdateClientTestimonialDto dto, CancellationToken cancellationToken)
         {
             try
             {
@@ -194,38 +180,32 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                     response.Message = "Id required.";
                     return response;
                 }
-                var toUpdate = await _serviceManager.CompanyInfos.GetAsync(new GenericServiceRequest<CompanyInfo>
+                var data = await _serviceManager.ClientTestimonials.GetAsync(new GenericServiceRequest<ClientTestimonial>
                 {
                     Expression = b => b.Id == dto.Id,
                     NoTracking = true,
                     CancellationToken = cancellationToken
                 });
+                var imageUrl = "";
+                if(dto.ImageUrl != null)
+                {
+                    //delete old images
+                    if (!string.IsNullOrEmpty(data.ImageUrl))
+                    {
+                        _serviceManager.File.DeleteFile(data.ImageUrl);
+                    }
 
-                toUpdate.Name = dto.Name ?? toUpdate.Name;
-                toUpdate.Quote = dto.Quote ?? toUpdate.Quote;
-                toUpdate.ShortTitle = dto.ShortTitle ?? toUpdate.ShortTitle;
-                toUpdate.Description = dto.Description ?? toUpdate.Description;
-                toUpdate.Email = dto.Email ?? toUpdate.Email;
-                toUpdate.PhoneNumber = dto.PhoneNumber ?? toUpdate.PhoneNumber;
-                toUpdate.Location = dto.Location ?? toUpdate.Location;
-                toUpdate.MapLink = dto.MapLink ?? toUpdate.MapLink;
-                toUpdate.SecondMapLink = dto.SecondMapLink ?? toUpdate.SecondMapLink;
-                toUpdate.FacebookLink = dto.FacebookLink ?? toUpdate.FacebookLink;
-                toUpdate.YoutubeLink = dto.YoutubeLink ?? toUpdate.YoutubeLink;
-                toUpdate.LinkedInLink = dto.LinkedInLink ?? toUpdate.LinkedInLink;
-                toUpdate.InstagramLink = dto.InstagramLink ?? toUpdate.InstagramLink;
-                toUpdate.TwitterLink = dto.TwitterLink ?? toUpdate.TwitterLink;
-                toUpdate.Mission = dto.Mission ?? toUpdate.Mission;
-                toUpdate.Vision = dto.Vision ?? toUpdate.Vision;
-                toUpdate.AnnualTurnover = dto.AnnualTurnover <= 0 ? toUpdate.AnnualTurnover : dto.AnnualTurnover;
-                toUpdate.NumberOfEmployees = dto.NumberOfEmployees <= 0 ? toUpdate.NumberOfEmployees : dto.NumberOfEmployees;
-                toUpdate.NumberOfSewingPlants = dto.NumberOfSewingPlants <= 0 ? toUpdate.NumberOfSewingPlants : dto.NumberOfSewingPlants;
-                toUpdate.NumberOfSewingLines = dto.NumberOfSewingLines <= 0 ? toUpdate.NumberOfSewingLines : dto.NumberOfSewingLines;
-                toUpdate.ProductionCapacity = dto.ProductionCapacity <= 0 ? toUpdate.ProductionCapacity : dto.ProductionCapacity;
-                toUpdate.PrimaryMarkets = dto.PrimaryMarkets ?? toUpdate.PrimaryMarkets;
-               
+                    imageUrl = await _serviceManager.File.FileUpload(dto.ImageUrl, "images");
+                }
                 
-                _serviceManager.CompanyInfos.Update(toUpdate);
+
+                data.Name = dto.Name ?? data.Name;
+                data.CompanyName = dto.CompanyName ?? data.CompanyName;
+                data.Message = dto.Message ?? data.Message;
+                data.ReviewStars = dto.ReviewStars <= 0 ? data.ReviewStars : dto.ReviewStars;
+                data.ImageUrl = imageUrl != "" ? imageUrl : data.ImageUrl;
+                
+                _serviceManager.ClientTestimonials.Update(data);
                 await _serviceManager.Save();
 
                 response.Success = true;
@@ -252,7 +232,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
 
         [HttpDelete]
         [Route("delete")]
-        public async Task<ApiResponse> DeleteCompanyInfo(int Id, CancellationToken cancellationToken)
+        public async Task<ApiResponse> DeleteClientTestimonial(int Id, CancellationToken cancellationToken)
         {
             if(Id <= 0)
             {
@@ -262,13 +242,13 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 return response;
             }
 
-            var toDelete = await _serviceManager.CompanyInfos.GetAsync(new GenericServiceRequest<CompanyInfo>
+            var data = await _serviceManager.ClientTestimonials.GetAsync(new GenericServiceRequest<ClientTestimonial>
             {
                 Expression = x=>x.Id == Id,
                 NoTracking = true,
                 CancellationToken = cancellationToken
             });
-            if(toDelete == null)
+            if(data == null)
             {
                 response.Success = false;
                 response.StatusCode = HttpStatusCode.NotFound;
@@ -276,7 +256,13 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 return response;
             }
 
-            _serviceManager.CompanyInfos.Remove(toDelete);
+            //delete old images
+            if (!string.IsNullOrEmpty(data.ImageUrl))
+            {
+                _serviceManager.File.DeleteFile(data.ImageUrl);
+            }
+
+            _serviceManager.ClientTestimonials.Remove(data);
             await _serviceManager.Save();
 
             response.Success = true;
