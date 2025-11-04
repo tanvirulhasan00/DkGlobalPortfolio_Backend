@@ -8,6 +8,7 @@ namespace DkGLobalPortfolio.WebApi.Models.Product
         [Key]
         public int Id { get; set; }
         public string? Title { get; set; }
+        public string? SearchText { get; set; }
         public string ImageUrl { get; set; }
         public bool IsActive { get; set; }
 

@@ -120,7 +120,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
         {
             try
             {
-                var profileImageUrl = "";
+                var productImageUrl = "";
                 if (dto == null)
                 {
                     response.Success = false;
@@ -130,13 +130,14 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 } 
                 if(dto.ImageUrl != null)
                 {
-                    profileImageUrl = await _serviceManager.File.FileUpload(dto.ImageUrl, "product-images");
+                    productImageUrl = await _serviceManager.File.FileUpload(dto.ImageUrl, "product-images");
                 }
 
                 var toCreate = new ProductImage
                 {
                     Title = dto.Title,
-                    ImageUrl = profileImageUrl,
+                    SearchText = dto.SearchText,
+                    ImageUrl = productImageUrl,
                     ProductId = dto.OwnerId,
                     IsActive = true
                 };
@@ -197,6 +198,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 }
                 
                 toUpdate.Title = dto.Title ?? toUpdate.Title;
+                toUpdate.SearchText = dto.SearchText ?? toUpdate.SearchText;
                 toUpdate.ImageUrl = imageUrl != "" ? imageUrl : toUpdate.ImageUrl;
                 toUpdate.ProductId = dto.OwnerId <= 0 ? toUpdate.ProductId : dto.OwnerId;
                 
