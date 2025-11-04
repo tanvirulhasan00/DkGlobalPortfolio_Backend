@@ -3,6 +3,7 @@
     public class CreateProfileImageUrlDto
     {
         public string? Title { get; set; }
+        public string? SearchText { get; set; }
         public IFormFile ImageUrl { get; set; }
         public int? OwnerId { get; set; }
     }

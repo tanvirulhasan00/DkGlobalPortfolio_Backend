@@ -135,6 +135,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 var toCreate = new ProfileImage
                 {
                     Title = dto.Title,
+                    SearchText = dto.SearchText,
                     ImageUrl = profileImageUrl,
                     CompanyInfoId = dto.OwnerId,
                     IsActive = true
@@ -196,6 +197,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 }
                 
                 toUpdate.Title = dto.Title ?? toUpdate.Title;
+                toUpdate.SearchText = dto.SearchText ?? toUpdate.SearchText;
                 toUpdate.ImageUrl = imageUrl != "" ? imageUrl : toUpdate.ImageUrl;
                 toUpdate.CompanyInfoId = dto.OwnerId <= 0 ? toUpdate.CompanyInfoId : dto.OwnerId;
                 
