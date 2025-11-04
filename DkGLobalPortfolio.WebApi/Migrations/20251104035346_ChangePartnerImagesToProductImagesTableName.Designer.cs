@@ -4,6 +4,7 @@ using DkGLobalPortfolio.WebApi.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DkGLobalPortfolio.WebApi.Migrations
 {
     [DbContext(typeof(DkGlobalPortfolioDbContext))]
-    partial class DkGlobalPortfolioDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251104035346_ChangePartnerImagesToProductImagesTableName")]
+    partial class ChangePartnerImagesToProductImagesTableName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -713,22 +716,26 @@ namespace DkGLobalPortfolio.WebApi.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Description")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Icon")
-                        .HasColumnType("longtext");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("LongDescription")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("PdfLink")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<int>("ReportCategoryId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ShortDescription")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");

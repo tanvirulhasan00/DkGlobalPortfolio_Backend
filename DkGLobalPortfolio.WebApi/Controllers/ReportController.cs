@@ -122,7 +122,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
         {
             try
             {
-               
+                var pdfLink = "";
                 if (dto == null)
                 {
                     response.Success = false;
@@ -130,13 +130,18 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                     response.Message = "Empty request data";
                     return response;
                 }
-                
+
+                if (dto.PdfLink != null)
+                {
+                    pdfLink = await _serviceManager.File.FileUpload(dto.PdfLink, "reports");
+                }
+
                 var toCreate = new Report
                 {
                     Title = dto.Title,
-                    ShortDescription = dto.ShortDescription,
-                    LongDescription = dto.LongDescription,
-                    PdfLink = dto.PdfLink,
+                    Description = dto.Description,
+                    Icon = dto.Icon,
+                    PdfLink = pdfLink,
                     ReportCategoryId = dto.ReportCategoryId,
                     IsActive = true
                 };
@@ -185,11 +190,22 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                     CancellationToken = cancellationToken
                 });
 
+                var pdfLink = "";
+                if (dto.PdfLink != null)
+                {
+                    //delete old file
+                    if (!string.IsNullOrEmpty(toUpdate.PdfLink))
+                    {
+                        _serviceManager.File.DeleteFile(toUpdate.PdfLink);
+                    }
+
+                    pdfLink = await _serviceManager.File.FileUpload(dto.PdfLink, "reports");
+                }
+
                 toUpdate.Title = dto.Title ?? toUpdate.Title;
-                toUpdate.ShortDescription = dto.ShortDescription ?? toUpdate.ShortDescription;
-                toUpdate.LongDescription = dto.LongDescription ?? toUpdate.LongDescription;
-                toUpdate.PdfLink = dto.PdfLink ?? toUpdate.PdfLink;
-                toUpdate.ReportCategoryId = dto.ReportCategoryId <= 0 ? toUpdate.ReportCategoryId : dto.ReportCategoryId;
+                toUpdate.Description = dto.Description ?? toUpdate.Description;
+                toUpdate.Icon = dto.Icon ?? toUpdate.Icon;
+                toUpdate.PdfLink = pdfLink != "" ? pdfLink : toUpdate.PdfLink;
                 
                 _serviceManager.Reports.Update(toUpdate);
                 await _serviceManager.Save();

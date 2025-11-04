@@ -34,7 +34,7 @@ namespace DkGLobalPortfolio.WebApi.Database
         public DbSet<Partner> Partners => Set<Partner>();
         public DbSet<Product> Products => Set<Product>();
         public DbSet<ProductCategory> PartnerCategories => Set<ProductCategory>();
-        public DbSet<ProductImage> PartnerImages => Set<ProductImage>();
+        public DbSet<ProductImage> ProductImages => Set<ProductImage>();
         public DbSet<CompanyInfo> CompanyInfos => Set<CompanyInfo>();
         public DbSet<Branch> Branches => Set<Branch>();
         public DbSet<BankInfo> BankInfos => Set<BankInfo>();
