@@ -90,7 +90,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 var data = await _serviceManager.Products.GetAsync(new GenericServiceRequest<Product>
                 {
                     Expression = x => x.Id == Id,
-                    IncludeProperties = null,
+                    IncludeProperties = "ProductCategory,ProductImages",
                     NoTracking = true,
                     CancellationToken = cancellationToken
                 });
@@ -102,10 +102,22 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                     return response;
                 }
 
+                var dataToDisplay = new
+                {
+                    id = data.Id,
+                    name = data.Name,
+                    category = data.ProductCategory.Name,
+                    imageUrl = data.ProductImages.Select(i=>i.ImageUrl),
+                    isActive = data.IsActive
+
+                };
+                
+               
+
                 response.Success = true;
                 response.StatusCode = HttpStatusCode.OK;
                 response.Message = "Successful";
-                response.Result = data;
+                response.Result = dataToDisplay;
                 return response;
             }
             catch (TaskCanceledException ex)
@@ -142,8 +154,8 @@ namespace DkGLobalPortfolio.WebApi.Controllers
                 var toCreate = new Product
                 {
                     Name = dto.Name,
-                    ShortDescription = dto.ShortDescription,
-                    LongDescription = dto.LongDescription,
+                    ShortDescription = dto.ShortDescription ?? "",
+                    LongDescription = dto.LongDescription ?? "",
                     ProductCategoryId = dto.ProductCategoryId,
                     IsActive = true,
                 };
