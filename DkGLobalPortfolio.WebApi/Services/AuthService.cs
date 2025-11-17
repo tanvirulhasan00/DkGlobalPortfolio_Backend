@@ -1,4 +1,5 @@
 ﻿using DkGLobalPortfolio.WebApi.Database;
+using DkGLobalPortfolio.WebApi.Models.Request;
 using DkGLobalPortfolio.WebApi.Models.Response;
 using DkGLobalPortfolio.WebApi.Models.User;
 using DkGLobalPortfolio.WebApi.Models.User.Dto;
@@ -6,6 +7,7 @@ using DkGLobalPortfolio.WebApi.Services.IServices;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Ocsp;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
@@ -29,14 +31,28 @@ namespace DkGLobalPortfolio.WebApi.Services
             response = new ApiResponse();
         }
 
-        public async Task<ApiResponse> Login(string username, string password)
+        public async Task<ApiResponse> Login(LoginRequestDto requestDto)
         {
             var loginResponse = new LoginResponse();
             try
             {
-                var user = _db.ApplicationUsers?.FirstOrDefault(u => u.UserName.ToLower() == username.ToLower());
-                bool isValid = await _userManager.CheckPasswordAsync(user, password);
-                if (user == null || isValid == false)
+                if (requestDto == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    response.Message = "Username or password is incorrect";
+                    return response;
+                }
+                var user = _db.ApplicationUsers?.FirstOrDefault(u => u.UserName.ToLower() == requestDto.Username.ToLower());
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    response.Message = "Username or password is incorrect";
+                    return response;
+                }
+                bool isValid = await _userManager.CheckPasswordAsync(user, requestDto.Password);
+                if (isValid == false)
                 {
                     response.Success = false;
                     response.StatusCode = HttpStatusCode.BadRequest;
@@ -48,6 +64,7 @@ namespace DkGLobalPortfolio.WebApi.Services
                 var roles = await _userManager.GetRolesAsync(user);
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var key = Encoding.ASCII.GetBytes(_secretKey);
+                var tokenExpire = requestDto.RememberMe ? DateTime.UtcNow.AddDays(10) : DateTime.UtcNow.AddMinutes(30);
 
                 var tokenDescription = new SecurityTokenDescriptor
                 {
@@ -57,7 +74,7 @@ namespace DkGLobalPortfolio.WebApi.Services
                         new Claim(ClaimTypes.Role, roles.FirstOrDefault())
 
                         ]),
-                    Expires = DateTime.UtcNow.AddDays(7),
+                    Expires = tokenExpire,
                     SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
                 };
 
@@ -66,6 +83,7 @@ namespace DkGLobalPortfolio.WebApi.Services
                 loginResponse.UserId = user.Id;
                 loginResponse.Role = roles.FirstOrDefault();
                 loginResponse.Token = tokenHandler.WriteToken(token);
+                loginResponse.TokenExpire = tokenExpire;
 
                 response.Success = true;
                 response.StatusCode = HttpStatusCode.OK;

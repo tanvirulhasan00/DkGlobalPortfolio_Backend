@@ -7,6 +7,7 @@ using DkGLobalPortfolio.WebApi.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Ocsp;
 using System.Data;
 using System.Net;
 using System.Text.RegularExpressions;
@@ -25,23 +26,10 @@ namespace DkGLobalPortfolio.WebApi.Controllers
 
         [HttpPost]
         [Route("login")]
-        public async Task<ApiResponse> LoginReq(string username, string password)
+        public async Task<ApiResponse> LoginReq(LoginRequestDto req)
         {
-            var response = new ApiResponse();
-            if (username != null && username != "" && password != null && password != "")
-            {
-
-                response = await _serviceManager.Auth.Login(username, password);
-                return response;
-
-            }
-            else
-            {
-                response.Success = false;
-                response.StatusCode = HttpStatusCode.BadRequest;
-                response.Message = "Username or password is incorrect";
-                return response;
-            }
+            var response = await _serviceManager.Auth.Login(req);
+            return response;
         }
 
         [HttpPost]
