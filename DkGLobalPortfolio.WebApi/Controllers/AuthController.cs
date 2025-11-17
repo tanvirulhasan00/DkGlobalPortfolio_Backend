@@ -119,7 +119,7 @@ namespace DkGLobalPortfolio.WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("user/get")]
+        [Route("get")]
         public async Task<ApiResponse> GetUserInfo(string UserId, CancellationToken cancellationToken)
         {
             var response = new ApiResponse();
